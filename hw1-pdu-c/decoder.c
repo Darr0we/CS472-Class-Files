@@ -7,39 +7,37 @@
 #include "nethelper.h"
 #include "decoder.h"
 
-//This is where you will be putting your captured network frames for testing.
-//Before you do your own, please test with the ones that I provided as samples:
 #include "testframes.h"
 
-//You can update this array as you add and remove test cases, you can
-//also comment out all but one of them to isolate your testing. This
-//allows us to loop over all of the test cases.  Note MAKE_PACKET creates
-//a test_packet_t element for each sample, this allows us to get and use
-//the packet length, which will be helpful later.
+//I commented out my custom test cases to de-clutter the output
 test_packet_t TEST_CASES[] = {
     MAKE_PACKET(raw_packet_icmp_frame198),
     MAKE_PACKET(raw_packet_icmp_frame362),
     MAKE_PACKET(raw_packet_arp_frame78),
 
-    MAKE_PACKET(raw_packet_arp_frame1m),
-    MAKE_PACKET(raw_packet_arp_frame2m),
-    MAKE_PACKET(raw_packet_arp_frame3m),
+    //MAKE_PACKET(raw_my_icmp_01),
+    //MAKE_PACKET(raw_my_icmp_02),
+    //MAKE_PACKET(raw_my_icmp_03),
 
-    MAKE_PACKET(raw_packet_icmp_echo_frame1m),
-    MAKE_PACKET(raw_packet_icmp_echo_frame2m),
-    MAKE_PACKET(raw_packet_icmp_echo_frame3m),
-    
-    MAKE_PACKET(raw_packet_icmp_frame1m),
-    MAKE_PACKET(raw_packet_icmp_frame2m),
-    MAKE_PACKET(raw_packet_icmp_frame3m),
+    //MAKE_PACKET(raw_my_icmp_echo_01),
+    //MAKE_PACKET(raw_my_icmp_echo_02),
+    //MAKE_PACKET(raw_my_icmp_echo_03),
+
+    //MAKE_PACKET(raw_my_arp_01),
+    //MAKE_PACKET(raw_my_arp_02),
+    //MAKE_PACKET(raw_my_arp_03),
 };
 
-// !!!!!!!!!!!!!!!!!!!!! WHAT YOU NEED TO DO !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-//
-// Search the code for TODO:, each one of these describes a place where
-// you need to write code.  This scaffold should compile as is.  Make sure
-// you delete the TODO: documentation in your implementation and provide
-// some documentation on what you actually accomplished.
+// ????????????????????? WHAT YOU NEED TO GRADE ???????????????????????????
+// process_arp()        line 136
+// print_arp()          line 151
+// check_ip_for_icmp()  line 184
+// process_icmp()       line 195
+// is_icmp_echo()       line 209
+// process_icmp_echo()  line 220
+// print_icmp_echo()    line 241
+// print_icmp_payload() line 286
+
 
 int main(int argc, char **argv) {
     //This code is here as a refresher on how to figure out how
@@ -57,7 +55,7 @@ int main(int argc, char **argv) {
         printf("TESTING A NEW PACKET\n");
         printf("--------------------------------------------------\n");
         test_packet_t test_case = TEST_CASES[i];
-
+        printf("type bytes are 0x%02x, 0x%02x\n", test_case.raw_packet[12], test_case.raw_packet[13]);
         decode_raw_packet(test_case.raw_packet, test_case.packet_len);
     }
 

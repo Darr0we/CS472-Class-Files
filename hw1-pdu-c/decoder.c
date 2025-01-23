@@ -19,7 +19,19 @@
 test_packet_t TEST_CASES[] = {
     MAKE_PACKET(raw_packet_icmp_frame198),
     MAKE_PACKET(raw_packet_icmp_frame362),
-    MAKE_PACKET(raw_packet_arp_frame78)
+    MAKE_PACKET(raw_packet_arp_frame78),
+
+    MAKE_PACKET(raw_packet_arp_frame1m),
+    MAKE_PACKET(raw_packet_arp_frame2m),
+    MAKE_PACKET(raw_packet_arp_frame3m),
+
+    MAKE_PACKET(raw_packet_icmp_echo_frame1m),
+    MAKE_PACKET(raw_packet_icmp_echo_frame2m),
+    MAKE_PACKET(raw_packet_icmp_echo_frame3m),
+    
+    MAKE_PACKET(raw_packet_icmp_frame1m),
+    MAKE_PACKET(raw_packet_icmp_frame2m),
+    MAKE_PACKET(raw_packet_icmp_frame3m),
 };
 
 // !!!!!!!!!!!!!!!!!!!!! WHAT YOU NEED TO DO !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -124,12 +136,8 @@ void decode_raw_packet(uint8_t *packet, uint64_t packet_len){
  *  converts all of the network byte order fields into host byte order.
  */
 arp_packet_t *process_arp(raw_packet_t raw_packet) {
-    arp_packet_t *arp = raw_packet;
-    // TODO: Add this if needed, but i think it is not
-    // convert big endian field from ethernet header
-    // arp->eth_hdr.frame_type = ntohs(arp->eth_hdr.frame_type);
+    arp_packet_t *arp = (arp_packet_t *)raw_packet;
 
-    // convert big endian fields from arp pdu
     arp->arp_hdr.htype = ntohs(arp->arp_hdr.htype);
     arp->arp_hdr.ptype = ntohs(arp->arp_hdr.ptype);
     arp->arp_hdr.op = ntohs(arp->arp_hdr.op);
@@ -162,7 +170,7 @@ void print_arp(arp_packet_t *arp){
     printf("\tspa:\t%s\n", spa);
     printf("\tsha:\t%s\n", sha);
     printf("\ttpa:\t%s\n", tpa);
-    printf("\tha:\t%s\n", tha);
+    printf("\ttha:\t%s\n", tha);
 }
 
 /********************************************************************************/
@@ -176,7 +184,7 @@ void print_arp(arp_packet_t *arp){
  *  IP PDU is set to ICMP_PTYPE to do this.
  */
 bool check_ip_for_icmp(ip_packet_t *ip){
-    return ip_packet_t->ip_pdu.protocol == ICMP_PTYPE;
+    return ip->ip_hdr.protocol == ICMP_PTYPE;
 }
 
 /*
@@ -187,19 +195,11 @@ bool check_ip_for_icmp(ip_packet_t *ip){
  *  network to host byte order. 
  */
 icmp_packet_t *process_icmp(ip_packet_t *ip){
-    icmp_packet_t *icmp = ip;
+    icmp_packet_t *icmp = (icmp_packet_t *)ip;
 
-    // TODO: Add this if needed, but i think it is not
-    // convert big endian fields from ip PDU
-    // icmp->ip.eth_hdr.frame_type = ntohs(icmp->ip.eth_hdr.frame_type);
-    // icmp->ip.ip_hdr.total_length = ntohs(icmp->ip.ip_hdr.total_length);
-    // icmp->ip.ip_hdr.identification = ntohs(icmp->ip.ip_hdr.identification);
-    // icmp->ip.ip_hdr.header_checksum = ntohs(icmp->ip.ip_hdr.header_checksum);
-
-    // convert big endian field from icmp PDU
     icmp->icmp_hdr.checksum = ntohs(icmp->icmp_hdr.checksum);
 
-    return icmp
+    return icmp;
 }
 
 /*
@@ -220,13 +220,13 @@ bool is_icmp_echo(icmp_packet_t *icmp) {
  *  convert from network to host byte order.
  */
 icmp_echo_packet_t *process_icmp_echo(icmp_packet_t *icmp){
-    icmp_echo_packet_t *icmp_echo = icmp;
-    
-    // convert big endian fields from icmp echo PDU
-    icmp_echo->id = ntohs(icmp_echo->id);
-    icmp_echo->sequence = ntohs(icmp_echo->sequence);
-    icmp_echo->timestamp = ntohl(icmp_echo->timestamp);
-    icmp_echo->timestamp_ms = ntohl(icmp_echo->timestamp_ms);
+    icmp_echo_packet_t *icmp_echo = (icmp_echo_packet_t *)icmp;
+
+    icmp_echo->icmp_echo_hdr.id = ntohs(icmp_echo->icmp_echo_hdr.id);
+    icmp_echo->icmp_echo_hdr.sequence = ntohs(icmp_echo->icmp_echo_hdr.sequence);
+    icmp_echo->icmp_echo_hdr.timestamp = ntohl(icmp_echo->icmp_echo_hdr.timestamp);
+    icmp_echo->icmp_echo_hdr.timestamp_ms = ntohl(icmp_echo->icmp_echo_hdr.timestamp_ms);
+
     return icmp_echo;
 }
 
@@ -241,33 +241,16 @@ icmp_echo_packet_t *process_icmp_echo(icmp_packet_t *icmp){
  *  gives the size of the payload buffer.
  */
 void print_icmp_echo(icmp_echo_packet_t *icmp_packet){
-//TODO:  take the icmp_packet parameter, of type icmp_echo_packet_t 
-//and print it out nicely.  My output looks like below, but you dont 
-//have to make it look exactly like this, just something nice. 
-/*
-Packet length = 98 bytes
-Detected raw frame type from ethernet header: 0x800
-Frame type = IPv4, now lets check for ICMP...
-ICMP Type 8
-ICMP PACKET DETAILS 
-     type:      0x08 
-     checksum:  0x7bda 
-     id:        0x4859 
-     sequence:  0x0000 
-     timestamp: 0x650e01eee1cc 
-     payload:   48 bytes 
-     ECHO Timestamp: TS = 2023-09-22 21:06:54.57804
- */
     uint16_t payload_size = ICMP_Payload_Size(icmp_packet);
 
     printf("ICMP PACKET DETAILS\n");
-    printf("\ttype:\t0x%02x\n", icmp_packet->icmp_hdr.type);
-    printf("\tchecksum:\t0x%04x\n", icmp_packet->icmp_hdr.checksum);
-    printf("\tid:\t0x%04x\n", icmp_packet->id);
-    printf("\tsequence:\t0x%04x\n", icmp_packet->sequence);
-    printf("\ttimestamp:\t0x%08x%08x\n", icmp_packet->timestamp);
+    printf("\ttype:\t\t0x%02x\n", icmp_packet->icmp_echo_hdr.icmp_hdr.type);
+    printf("\tchecksum:\t0x%04x\n", icmp_packet->icmp_echo_hdr.icmp_hdr.checksum);
+    printf("\tid:\t\t0x%04x\n", icmp_packet->icmp_echo_hdr.id);
+    printf("\tsequence:\t0x%04x\n", icmp_packet->icmp_echo_hdr.sequence);
+    printf("\ttimestamp:\t0x%08x\n", icmp_packet->icmp_echo_hdr.timestamp);
     printf("\tpayload:\t%u bytes\n", payload_size);
-    printf("\tECHO Timestamp: TS = %s\n", get_ts_formatted(icmp_packet->timestamp, icmp_packet->timestamp_ms));
+    printf("\tECHO Timestamp: %s\n", get_ts_formatted(icmp_packet->icmp_echo_hdr.timestamp, icmp_packet->icmp_echo_hdr.timestamp_ms));
 
     print_icmp_payload(icmp_packet->icmp_payload, payload_size);
 }
@@ -303,15 +286,12 @@ ICMP PACKET DETAILS
  * 0x0028 | 0x30  0x31  0x32  0x33  0x34  0x35  0x36  0x37  
  */
 void print_icmp_payload(uint8_t *payload, uint16_t payload_size) {
-//TODO:  this function takes the payload which is just basically an 
-//array of bytes and prints it out nicely.  My output is shown in the
-//function header, you can alter your output just make sure it looks
-//nice.  I provided the alogorithm for how I printed the above out
-//in the function header.
     uint8_t line_length = 8;
+    
     printf("PAYLOAD\n\n");
     printf("OFFSET | CONTENTS\n");
-    printf("-------------------------------------------------------\n");
+    printf("------------------------------------------------\n");
+
     for (int i = 0; i < payload_size; i++) {
         if (i % line_length == 0) {
             printf("0x%04x | ", i);
